@@ -12,6 +12,4 @@ CREATE TABLE supplier_invoice (
     payment_amount DECIMAL(7,2),
     state VARCHAR(255),
     UNIQUE KEY (supplier_id, invoice_id)
-)
-
-SELECT si.supplierId, count(si.*) as `count` FROM supplier_invoice si where si.supplierId = 'supplier_7' GROUP BY si.supplierId;
+);

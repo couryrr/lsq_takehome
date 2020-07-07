@@ -4,15 +4,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
@@ -50,11 +46,11 @@ public class SupplierInvoiceController {
 				"Payment Amount" };
 
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		
+
 		try {
 
-			//I would save the file here but not sure where to put it on another local
-			
+			// I would save the file here but not sure where to put it on another local
+
 			CSVParser csvParser = CSVFormat.DEFAULT.withHeader(HEADERS)
 					.parse(new InputStreamReader(file.getInputStream()));
 
@@ -90,30 +86,50 @@ public class SupplierInvoiceController {
 		return true;
 	}
 
-	@PostMapping("/SupplierSummary")
+	@GetMapping("/supplier-summary")
 	public SupplierInvoiceSummary listSupplierSummary(@RequestParam("supplierId") String supplierId) {
-		
+		System.out.println(supplierId);
 		List<SupplierInvoice> list = supplierInvoiceRepository.findBySupplierId(supplierId);
 
+		for(SupplierInvoice item : list) {
+			System.out.println(item.getInvoiceId());
+		}
+		
 		Map<String, Long> counts = list.stream()
 				.collect(Collectors.groupingBy(SupplierInvoice::getState, Collectors.counting()));
-		Map<String, BigDecimal> totals = list.stream().collect(Collectors.groupingBy(SupplierInvoice::getState,
-				Collectors.mapping(SupplierInvoice::getInvoiceAmount, Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
+		
+		System.out.println(" #### " + counts + " #### ");
+		
+		Map<String, BigDecimal> totals = list.stream().collect(
+				Collectors.groupingBy(SupplierInvoice::getState, Collectors.mapping(SupplierInvoice::getInvoiceAmount,
+						Collectors.reducing(BigDecimal.ZERO, BigDecimal::add))));
 
+		System.out.println(" #### " + totals + " #### ");
+		
 		SupplierInvoiceSummary ssi = new SupplierInvoiceSummary();
 
 		long open = counts.containsKey("OPEN") ? counts.get("OPEN") : 0;
+		
+		System.out.println(" #### " + open + " #### ");
+		
 		long late = counts.containsKey("LATE") ? counts.get("LATE") : 0;
+		
+		System.out.println(" #### " + late + " #### ");
+		
 		BigDecimal openAmount = totals.containsKey("OPEN") ? totals.get("OPEN") : BigDecimal.ZERO;
+		
+		System.out.println(" #### " + openAmount + " #### ");
+		
 		BigDecimal lateAmount = totals.containsKey("LATE") ? totals.get("LATE") : BigDecimal.ZERO;
 
+		System.out.println(" #### " + lateAmount + " #### ");
+		
 		ssi.setSupplierId(supplierId);
 		ssi.setTotalInvoices(list.stream().count());
 		ssi.setOpenInvoices(open);
 		ssi.setLateInvoices(late);
 		ssi.setOpenInvoicesAmount(openAmount);
 		ssi.setLateInvoicesAmount(lateAmount);
-		
 
 		return ssi;
 

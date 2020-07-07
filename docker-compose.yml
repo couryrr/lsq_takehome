@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+   db:
+     image: mysql:latest
+     volumes:
+       - db_data:/var/lib/mysql
+     restart: always
+     environment:
+       MYSQL_ROOT_PASSWORD: test1234
+       MYSQL_USER: lsq
+       MYSQL_PASSWORD: test1234
+     ports:
+       - "3306:3306"
+     volumes:
+       - ./misc/database/create_lsq.sql:/docker-entrypoint-initdb.d/0_init.sql
+   api:
+     depends_on:
+       - db
+     environment: # Pass environment variables to the service
+       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/lsq?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+       SPRING_DATASOURCE_USERNAME: root
+       SPRING_DATASOURCE_PASSWORD: test1234
+     image: couryrr/lsq:test
+     ports:
+       - "8080:8080"
+     restart: always
+volumes:
+    db_data: {}
